@@ -26,14 +26,16 @@ typedef struct Nod Nod;
 
 Masina citireMasinaDinFisier(FILE* file) {
 	char buffer[100];
-	char sep[3] = ",\n";
+	char sep[4] = ",-\n";
 	fgets(buffer, 100, file);
 	char* aux;
 	Masina m1;
-	aux = strtok(buffer, sep);
+	
+    aux = strtok(buffer, sep);
 	m1.id = atoi(aux);
 	m1.nrUsi = atoi(strtok(NULL, sep));
 	m1.pret= atof(strtok(NULL, sep));
+
 	aux = strtok(NULL, sep);
 	m1.model = malloc(strlen(aux) + 1);
 	strcpy_s(m1.model, strlen(aux) + 1, aux);
@@ -93,7 +95,6 @@ Nod* citireListaMasiniDinFisier(const char* numeFisier) {
     if(file){
         while(!feof(file)){
             adaugaMasinaInLista(&cap,citireMasinaDinFisier(file));  
-
         }
     }
     
