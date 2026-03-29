@@ -80,7 +80,6 @@ void adaugaMasinaInLista(Nod* cap, Masina masinaNoua) {
     
 }
 
-
 HashTable initializareHashTable(int dimensiune) {
 	HashTable ht;
 	ht.dim = dimensiune;
@@ -105,29 +104,78 @@ void inserareMasinaInTabela(HashTable hash, Masina masina) {
         adaugaMasinaInLista(hash.tabela[pozitie], masina);
     }
     else{
-        hash.tabela[pozitie] = 
+        hash.tabela[pozitie] = malloc(sizeof(Nod));
+        hash.tabela[pozitie]->info=masina;
+        hash.tabela[pozitie]->next=NULL;
     }
 }
 
-HashTable citireMasiniDinFisier(const char* numeFisier) {
-	//functia primeste numele fisierului, il deschide si citeste toate masinile din fisier
-	//prin apelul repetat al functiei citireMasinaDinFisier()
-	// aceste masini sunt inserate intr-o tabela de dispersie initializata aici
-	//ATENTIE - la final inchidem fisierul/stream-ul
+HashTable citireMasiniDinFisier(const char* numeFisier, int dimensiune) {
+    FILE* file = fopen(numeFisier, "r");
+    HashTable nou=initializareHashTable(dimensiune);
+    while (!feof(file)){
+       inserareMasinaInTabela(nou, citireMasinaDinFisier(file));
+    }
+    fclose(file);
+    return nou;
 }
 
 void afisareTabelaDeMasini(HashTable ht) {
-	//sunt afisate toate masinile cu evidentierea clusterelor realizate
+    for(int i=0; i<ht.dim;i++){
+        if(ht.tabela[i]){
+            printf("masinile de pe pozitia %d sunt:\n",i);
+            afisareListaMasini(ht.tabela[i]);
+        }
+    }
 }
 
 void dezalocareTabelaDeMasini(HashTable *ht) {
-	//sunt dezalocate toate masinile din tabela de dispersie
+	for(int i=0;i<ht->dim;i++){
+            Nod* p = ht->tabela[i];
+            while(p){
+                Nod* aux = p;
+                p=p->next;
+                if(aux->info.model){
+                    free(aux->info.model);
+                }
+                if(aux->info.numeSofer){
+                    free(aux->info.numeSofer);
+                }
+                free(aux);
+            }
+            ht->tabela[i] = NULL;
+        
+    }
+    ht->dim=0;
+    free(ht->tabela);
+    ht->tabela = NULL;
+}
+float calculeazaMedieLista(Nod* cap){
+    float suma=0;
+    int nrElemente=0;
+    while(cap){
+        suma+=cap->info.pret;
+        nrElemente++;
+        cap=cap->next;
+    }
+    return (nrElemente > 0 ?(suma/nrElemente):0);
 }
 
 float* calculeazaPreturiMediiPerClustere(HashTable ht, int* nrClustere) {
-	//calculeaza pretul mediu al masinilor din fiecare cluster.
-	//trebuie sa returnam un vector cu valorile medii per cluster.
-	//lungimea vectorului este data de numarul de clustere care contin masini
+    *nrClustere=0;
+    float* preturi = NULL;
+    for(int i=0;i<ht.dim;i++){
+        if(ht.tabela[i]){
+            (*nrClustere)++;
+        }
+    }
+    preturi = malloc(sizeof(float)* (*nrClustere));
+    int index =0;
+    for(int i=0;i<ht.dim;i++){
+        preturi[index]=calculeazaMedieLista(ht.tabela[i]);
+        index++;
+    }
+
 	return NULL;
 }
 
@@ -139,7 +187,12 @@ Masina getMasinaDupaCheie(HashTable ht /*valoarea pentru masina cautata*/) {
 }
 
 int main() {
-
-
+    int nrClustere;
+    HashTable hash = citireMasiniDinFisier("masini3.txt", 10);
+    afisareTabelaDeMasini(hash);
+    // dezalocareTabelaDeMasini(&hash);
+    // afisareTabelaDeMasini(hash);
+    int nrClustere = 0;
+    float* preturi = calculeazaPreturiMediiPerClustere(hash, &nrClustere);
 	return 0;
 }
