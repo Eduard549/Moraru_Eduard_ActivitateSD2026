@@ -175,24 +175,53 @@ float* calculeazaPreturiMediiPerClustere(HashTable ht, int* nrClustere) {
         preturi[index]=calculeazaMedieLista(ht.tabela[i]);
         index++;
     }
-
-	return NULL;
+	return preturi;
 }
 
-Masina getMasinaDupaCheie(HashTable ht /*valoarea pentru masina cautata*/) {
+
+
+Masina getMasinaDinLista(Nod* cap, const char* numeSofer){
+    Masina m;
+    m.id=-1;
+    while(cap&& strcmp(numeSofer, cap->info.numeSofer)!=0){
+        cap = cap->next;
+
+    }
+    if(cap){
+        m=cap->info;
+        m.model = (char*)malloc(strlen(cap->info.model)+1);
+        strcpy(m.model, cap->info.model);
+        m.numeSofer = (char*)malloc(strlen(cap->info.numeSofer)+1);
+        strcpy(m.numeSofer, cap->info.numeSofer);
+    }
+    return m;
+
+}
+
+Masina getMasinaDupaCheie(HashTable ht, const char* numeSofer) {
 	Masina m;
-	//cauta masina dupa valoarea atributului cheie folosit in calcularea hash-ului
-	//trebuie sa modificam numele functiei 
+    int index = calculeazaHash(numeSofer, ht.dim);
+    if(index>=0 && index < ht.dim){
+        return getMasinaDinLista(ht.tabela[index], numeSofer);
+    }
+
+
 	return m;
 }
 
 int main() {
     int nrClustere;
     HashTable hash = citireMasiniDinFisier("masini3.txt", 10);
-    afisareTabelaDeMasini(hash);
+    // afisareTabelaDeMasini(hash);
     // dezalocareTabelaDeMasini(&hash);
     // afisareTabelaDeMasini(hash);
-    int nrClustere = 0;
+    nrClustere = 0;
     float* preturi = calculeazaPreturiMediiPerClustere(hash, &nrClustere);
+    printf("nr clustere: %d\n", nrClustere);
+    for(int i=0;i<nrClustere; i++){
+        printf("cluster %d: %.2f\n", i+1,preturi[i]);
+    }
+    afisareMasina(getMasinaDupaCheie(hash, "Gigel Alex"));
+    dezalocareTabelaDeMasini(&hash);
 	return 0;
 }
